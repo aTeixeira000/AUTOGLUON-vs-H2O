@@ -1,0 +1,4 @@
+docker build --no-cache -t tcc-automl .
+
+docker run -it --rm -v "C:\Users\texeca\Desktop\AUTOML":/workspace tcc-automl bash
+
