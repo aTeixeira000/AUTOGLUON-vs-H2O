@@ -21,7 +21,7 @@ def train_predictor(train_df: pd.DataFrame) -> TabularPredictor:
     predictor = TabularPredictor(
         eval_metric='f1',
         label=LABEL,
-        path=SAVE_PATH
+        path=SAVE_PATH,
     ).fit(train_df, num_bag_folds=10)
     return predictor
 
@@ -76,11 +76,57 @@ def show_leaderboard(
     out_df.to_csv(str(out_csv), index=False)
     return out_df
 
+# ------------- entrada manual -------------
+def ler_paciente_manual() -> pd.DataFrame:
+    print("\n=== Digite os dados do novo paciente (AutoGluon) ===")
+    preg = int(input("Pregnancies (nº de gestações): "))
+    glu  = float(input("Glucose (glicose plasmática): "))
+    bp   = float(input("BloodPressure (pressão diastólica): "))
+    skin = float(input("SkinThickness (espessura de pele): "))
+    ins  = float(input("Insulin (insulina sérica): "))
+    bmi  = float(input("BMI (índice de massa corporal): "))
+    dpf  = float(input("DiabetesPedigreeFunction: "))
+    age  = int(input("Age (idade): "))
+
+    dados = {
+        "Pregnancies": [preg],
+        "Glucose": [glu],
+        "BloodPressure": [bp],
+        "SkinThickness": [skin],
+        "Insulin": [ins],
+        "BMI": [bmi],
+        "DiabetesPedigreeFunction": [dpf],
+        "Age": [age],
+    }
+    return pd.DataFrame(dados)
+
+def prever_paciente_autogluon(predictor):
+    novo = ler_paciente_manual()
+
+    # classe prevista (0 = não diabético, 1 = diabético)
+    classe = predictor.predict(novo).iloc[0]
+
+    # probabilidades por classe
+    proba_df = predictor.predict_proba(novo)
+    # coluna 1 = probabilidade de Outcome = 1 (diabético)
+    prob_diab = proba_df[1].iloc[0]
+
+    print("\n=== Resultado AutoGluon ===")
+    if classe == 1:
+        print(f"-> O modelo prevê que o paciente TEM diabetes.")
+    else:
+        print(f"-> O modelo prevê que o paciente NÃO tem diabetes.")
+
+    print(f"-> Probabilidade de diabetes (classe 1): {prob_diab:.2%}")
+
 # ----------------- main -----------------
 def main():
     train_df = ler_treino()
     predictor = train_predictor(train_df)
     show_leaderboard(predictor, data_df=train_df, out_csv=OUT_PRED_CSV)
+    prever_paciente_autogluon(predictor)
 
 if __name__ == "__main__":
     main()
+
+
